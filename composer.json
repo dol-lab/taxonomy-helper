@@ -1,0 +1,18 @@
+{
+    "name": "dol-lab/taxonomy-helper",
+    "description": "Helps creating custom taxonomies (also for users).",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vitus Schuhwerk",
+            "email": "vitus.schuhwerk@gmail.com"
+        }
+    ],
+	"require": {},
+	"autoload": {
+		"classmap": [
+			"classes/*"
+		]
+	}
+}
