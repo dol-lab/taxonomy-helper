@@ -1,5 +1,6 @@
 {
 	"name": "dol-lab/taxonomy-helper",
+	"homepage": "https://github.com/dol-lab/taxonomy-helper",
 	"description": "Helps creating custom taxonomies (also for users).",
 	"type": "library",
 	"license": "MIT",
