@@ -266,8 +266,9 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 	public function filter_manage_user_tax_custom_column( $display, $column, $term_id ) {
 		if ( 'users' === $column ) {
 			$term = get_term( $term_id, $this->taxonomy_slug );
-			echo $term->count;
+			return $term->count;
 		}
+		return $display;
 	}
 
 	/**
