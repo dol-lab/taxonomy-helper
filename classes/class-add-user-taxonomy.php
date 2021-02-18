@@ -83,9 +83,9 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 		return $links;
 	}
 
-
 	/**
 	 * @todo: add nonce.
+	 * @todo: errorhandling! : https://wordpress.stackexchange.com/questions/261167/getting-admin-notices-to-appear-after-page-refresh
 	 * @param int $user_id The ID of the user to save the terms for.
 	 */
 	public function cb_save_user_tax_terms( $user_id ) {
@@ -95,16 +95,27 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 		if ( ! current_user_can( 'edit_user', $user_id ) && current_user_can( $tax->cap->assign_terms ) ) {
 			return false;
 		}
-		$term = $_POST[ $this->taxonomy_slug ];
-		/* Sets the terms (we're just using a single term) for the user. */
-		error_log( "set obj terms uid(obj):$user_id, term:" . print_r( $term, true ) );
 
-		wp_set_object_terms( $user_id, $term, $this->taxonomy_slug, false );
+		// Variables are not set, if no checkbox is checked.
+		if ( ! isset( $_POST['tax_input'] ) || ! isset( $_POST['tax_input'][ $this->taxonomy_slug ] ) ) {
+			error_log( "No user terms found when saving user [$user_id] profile. They might have all been deselected." );
+			$terms = array();
+		} else {
+			$terms = $_POST['tax_input'][ $this->taxonomy_slug ];
+		}
+
+		/*
+		 Sets the terms (we're just using a single term) for the user. */
+		// error_log( "set obj terms uid(obj):$user_id, term:" . print_r( $terms, true ) );
+
+		wp_set_object_terms( $user_id, $terms, $this->taxonomy_slug, false );
 		clean_object_term_cache( $user_id, $this->taxonomy_slug );
 		// restore_current_blog();
 	}
 
 	/**
+	 * todo move the inline styles somewhere close to the walker.
+	 *
 	 * @param object $user The user object currently being edited.
 	 */
 	function cb_edit_user_tax_section( $user ) {
@@ -119,34 +130,40 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 
 		/* Get the terms of the $this->taxonomy_slug taxonomy. */
 		$terms = get_terms( $this->taxonomy_slug, array( 'hide_empty' => false ) );
+
 		$term_select = '';
 		/* If there are any terms, loop through them and display checkboxes. */
 		if ( empty( $terms ) ) {
 			$term_select = $labels->not_found;
 		} else {
-			foreach ( $terms as $term ) {
-				$checked = ( 'user-new.php' !== $pagenow ) ?
-					checked( true, is_object_in_term( $user->ID, $this->taxonomy_slug, $term->slug ), false )
-					: '';
-				$term_attr = esc_attr( $term->slug );
-				$term_select .= "
-					<label for='$term_attr'>
-						<input
-							type='checkbox'
-							name='{$this->taxonomy_slug}[]'
-							id='$term_attr'
-							value='{$term->slug}'
-							$checked
-						>
-						{$term->name}
-					</label><br/>
-				";
+			$walker = new Nested_Select_Terms_Walker();
+
+
+			if ( 'user-new.php' === $pagenow ) {
+				$selected_ids = array(); // don't check terms, when creating a new user.
+			} else {
+				$selected = wp_get_object_terms( $user->ID, $this->taxonomy_slug );
+				$selected_ids = wp_list_pluck( $selected, 'term_id' );
+				$walker->user_id = $user->ID;
 			}
+
+			$term_select = wp_terms_checklist(
+				$user->ID,
+				array(
+					'checked_ontop' => false,
+					'taxonomy' => $this->taxonomy_slug,
+					'hierarchical' => true,
+					'walker' => $walker,
+					'echo' => false,
+					'selected_cats' => $selected_ids,
+				)
+			);
 		}
 
 		echo "
 			<h3>{$labels->name}</h3>
-			<table class='form-table'>
+
+			<table class='form-table nested-term-select'>
 				<tr>
 				<th><label for='{$this->taxonomy_slug}'>{$labels->add_or_remove_items}</label></th>
 				<td>
@@ -154,8 +171,73 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 				</td>
 				</tr>
 			</table>
+			<style>
+				/* some basic styling for the Nested_Select_Terms_Walker */
+				.nested-term-select input[disabled=disabled]+*:before{
+					content: '\\00a0🔒\\00a0';
+					display: inline-block;
+				}
+				.nested-term-select ul,
+				.nested-term-select li {
+					padding: 1px 20px;
+					position:relative;
+					margin: 0;
+				}
+				.nested-term-select label {
+					/* display:inline-block; */
+				}
+				.nested-term-select summary {
+					padding: 2px 0;
+				}
+				.nested-term-select summary:hover {
+					background-color: #eee;
+				}
+				.nested-term-select summary:focus{
+					outline: 1px solid #aaa;
+				}
+				.nested-term-select details {
+					position: relative;
+					transition: all 1s;
+				}
+				.nested-term-select details:before {
+					content: ' ';
+					height: calc( 100% - 30px );
+					top: 25px;
+					margin-left: 4px;
+					position: absolute;
+					width: 1px;
+					background-color: #ddd;
+				}
+				.nested-term-select details:hover:before {
+					background-color: #aaa;
+				}
+			</style>
 		";
 
+	}
+
+	/**
+	 * Currently not in use. This might be easier than the walker...
+	 *
+	 * @param string $taxonomy
+	 * @param int    $parent_id
+	 * @return string
+	 */
+	public function hierarchical_term_tree( string $taxonomy, $parent_id = 0 ) {
+		$terms = get_terms(
+			$taxonomy,
+			array(
+				'hide_empty' => false,
+				'parent' => $parent_id,
+				'taxonomy' => $taxonomy,
+			)
+		);
+		$children = '';
+		foreach ( $terms as $trm ) {
+			$grand_children = 0 !== $trm->term_id ? hierarchical_term_tree( $taxonomy, $trm->term_id ) : null;
+			$children .= "<li>$trm->name [$trm->term_taxonomy_id] ( $trm->count )$grand_children</li>";
+		}
+		return $children ? "<ul>$children</ul>" : '';
 	}
 
 	/**
@@ -188,7 +270,6 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 		}
 	}
 
-
 	/**
 	 * Unsets the 'posts' column and adds a 'users' column on the manage {$this->taxonomy_slug} admin page.
 	 */
@@ -197,7 +278,6 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 		$columns['users'] = __( 'Users' );
 		return $columns;
 	}
-
 
 	/**
 	 * Admin page for the taxonomy
@@ -218,12 +298,9 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 	 * @todo: is this the best filter to use? Some username blacklist?
 	 *
 	 * @param string $username
-	 * @return string The username, might be emptyl
+	 * @return string The username, might be empty
 	 */
 	public function filter_disallow_username_same_as_taxonomy( $username ) {
 		return ( $this->taxonomy_slug === $username ) ? '' : $username;
 	}
-
-
-
 }
