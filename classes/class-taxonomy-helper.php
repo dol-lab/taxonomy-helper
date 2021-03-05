@@ -114,7 +114,7 @@ class Taxonomy_Helper {
 		return $tq->query( $query );
 	}
 
-	public function th_get_terms_by_object_ids( array $obj_ids ) {
+	protected function th_get_terms_by_object_ids( array $obj_ids ) {
 		return $this->th_get_terms( array( 'object_ids' => $obj_ids ) );
 	}
 
@@ -131,7 +131,7 @@ class Taxonomy_Helper {
 	 * @param bool             $append    Optional. If false will delete difference of terms. Default false.
 	 * @return array|WP_Error Term taxonomy IDs of the affected terms or WP_Error on failure.
 	 */
-	public function th_set_object_terms( $object_id, $terms, $append ) {
+	protected function th_set_object_terms( $object_id, $terms, $append ) {
 		return wp_set_object_terms( $object_id, $terms, $this->taxonomy, $append );
 	}
 
@@ -142,7 +142,7 @@ class Taxonomy_Helper {
 	 * @return int[] an array of term-ids. Can be empty.
 	 * @throws Exception
 	 */
-	public function th_get_objects_by_terms( array $query = array() ) {
+	protected function th_get_objects_by_terms( array $query = array() ) {
 		$terms_array = $this->th_get_terms( $query );
 		$term_ids = wp_list_pluck( $terms_array, 'term_id' );
 

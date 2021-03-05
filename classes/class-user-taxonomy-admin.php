@@ -177,6 +177,7 @@ class User_Taxonomy_Admin {
 					padding: 1px 20px;
 					position:relative;
 					margin: 0;
+					list-style: none;
 				}
 				.nested-term-select label {
 					/* display:inline-block; */
