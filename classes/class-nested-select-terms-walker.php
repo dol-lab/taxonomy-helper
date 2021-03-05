@@ -32,6 +32,7 @@ class Nested_Select_Terms_Walker extends Walker_Category_Checklist {
 		$is_selected = in_array( $term->term_id, $args['selected_cats'], true );
 		$checked = checked( $is_selected, true, false );
 		$disabled = disabled( ! empty( $args['disabled'] ), true, false );
+		$readonly = readonly( ! empty( $args['readonly'] ), true, false );
 
 		$open = $this->is_open( $term->term_id, $taxonomy, $args['selected_cats'] ) ? 'open' : '';
 		$has_children = $this->has_children( $term->term_id, $args['taxonomy'] );
@@ -53,6 +54,7 @@ class Nested_Select_Terms_Walker extends Walker_Category_Checklist {
 					"id='in-$taxonomy-$term->term_id' " .
 					"$checked " .
 					"$disabled " .
+					"$readonly " .
 				'/>' .
 				"<b>$term->name</b> $description_string" .
 			'</label>

@@ -164,9 +164,13 @@ class User_Taxonomy_Admin {
 			</table>
 			<style>
 				/* some basic styling for the Nested_Select_Terms_Walker */
-				.nested-term-select input[disabled=disabled]+*:before{
+				.nested-term-select input[disabled=disabled]+*:before,
+				.nested-term-select input[type=checkbox][readonly]+*:before {
 					content: '\\00a0🔒\\00a0';
 					display: inline-block;
+				}
+				.nested-term-select input[type=checkbox][readonly] {
+					pointer-events: none;
 				}
 				.nested-term-select ul,
 				.nested-term-select li {
