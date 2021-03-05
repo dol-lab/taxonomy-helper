@@ -1,45 +1,37 @@
 <?php
 
 /**
- * @todo: when you add a user, the form is showing, but is not applied...
+ * Adds admin interfaces for user taxonomies.
+ *
+ * Currently only triggered, if in the right blog.
+ *
+ * @package
  */
-class Add_User_Taxonomy extends Add_Taxonomy {
+class User_Taxonomy_Admin {
 
 	/**
-	 * Decides if a selectbox for taxonomies shows in the backend.
-	 * (You might want to handle things with a plugin like ACF)
 	 *
-	 * You can add it as an option to $args.
-	 * True by default.
-	 *
-	 * @var bool
+	 * @var User_Taxonomy_Helper
 	 */
-	public $show_on_profile_page = true;
+	public $user_taxonomy_helper;
 
-	public function __construct( $taxonomy_slug, $object_type, $args ) {
+	public $taxonomy_slug;
 
-		$this->show_on_profile_page = isset( $args['show_on_profile_page'] ) ? $args['show_on_profile_page'] : true;
-		unset( $args['show_on_profile_page'] );
-
-		if ( 'user' !== $object_type ) {
-			wp_die( 'You can only init AddUserTaxonomy with $object_type user. You initialized with ' . $object_type . '.' );
-		}
-		parent::__construct( $taxonomy_slug, $object_type, $args );
+	public function __construct( User_Taxonomy_Helper $user_taxonomy_helper ) {
+		$this->user_taxonomy_helper = $user_taxonomy_helper;
+		$this->taxonomy_slug = $user_taxonomy_helper->taxonomy_slug;
+		$this->add_filters_hooks();
 	}
-
 	public function add_filters_hooks() {
-		parent::add_filters_hooks();
-
 		add_filter( 'sanitize_user', array( $this, 'filter_disallow_username_same_as_taxonomy' ) );
-		add_action( 'admin_menu', array( $this, 'add_user_taxonomy_admin_page' ) );
+		add_action( 'admin_menu', array( $this, 'user_taxonomy_helper_admin_page' ) );
 		add_filter( "manage_edit-{$this->taxonomy_slug}_columns", array( $this, 'filter_manage_edit_user_tax_columns' ), 10 );
 		add_filter( "manage_{$this->taxonomy_slug}_custom_column", array( $this, 'filter_manage_user_tax_custom_column' ), 10, 3 );
 		add_filter( 'parent_file', array( $this, 'filter_user_tax_parent_file' ) );
 
-		add_filter( 'rest_prepare_user', array( $this, 'filter_add_user_taxonomy_to_rest' ), 10, 3 );
+		add_filter( 'rest_prepare_user', array( $this, 'filter_user_taxonomy_helper_to_rest' ), 10, 3 );
 
-		if ( $this->show_on_profile_page ) {
-
+		if ( $this->user_taxonomy_helper->show_on_profile_page ) {
 			add_action( 'show_user_profile', array( $this, 'cb_edit_user_tax_section' ), 10 );
 			add_action( 'edit_user_profile', array( $this, 'cb_edit_user_tax_section' ), 10 );
 			add_action( 'user_new_form', array( $this, 'cb_edit_user_tax_section' ), 10 );
@@ -59,7 +51,7 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 	 * @param WP_User          $user     User object used to create response.
 	 * @param WP_REST_Request  $request  Request object.
 	 */
-	function filter_add_user_taxonomy_to_rest( WP_REST_Response $response, WP_User $user, WP_REST_Request $request ) {
+	public function filter_user_taxonomy_helper_to_rest( WP_REST_Response $response, WP_User $user, WP_REST_Request $request ) {
 		$response->add_links( $this->prepare_rest_link_user_taxonomy( $user, $this->taxonomy_slug ) );
 		return $response;
 	}
@@ -137,7 +129,6 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 			$term_select = $labels->not_found;
 		} else {
 			$walker = new Nested_Select_Terms_Walker();
-
 
 			if ( 'user-new.php' === $pagenow ) {
 				$selected_ids = array(); // don't check terms, when creating a new user.
@@ -217,30 +208,6 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 	}
 
 	/**
-	 * Currently not in use. This might be easier than the walker...
-	 *
-	 * @param string $taxonomy
-	 * @param int    $parent_id
-	 * @return string
-	 */
-	public function hierarchical_term_tree( string $taxonomy, $parent_id = 0 ) {
-		$terms = get_terms(
-			$taxonomy,
-			array(
-				'hide_empty' => false,
-				'parent' => $parent_id,
-				'taxonomy' => $taxonomy,
-			)
-		);
-		$children = '';
-		foreach ( $terms as $trm ) {
-			$grand_children = 0 !== $trm->term_id ? hierarchical_term_tree( $taxonomy, $trm->term_id ) : null;
-			$children .= "<li>$trm->name [$trm->term_taxonomy_id] ( $trm->count )$grand_children</li>";
-		}
-		return $children ? "<ul>$children</ul>" : '';
-	}
-
-	/**
 	 * Update parent file name to fix the selected menu issue. Otherwise you would see 'Posts' expanded in backend.
 	 */
 	public function filter_user_tax_parent_file( $parent_file ) {
@@ -283,7 +250,7 @@ class Add_User_Taxonomy extends Add_Taxonomy {
 	/**
 	 * Admin page for the taxonomy
 	 */
-	public function add_user_taxonomy_admin_page() {
+	public function user_taxonomy_helper_admin_page() {
 		$tax = get_taxonomy( $this->taxonomy_slug );
 		add_users_page(
 			esc_attr( $tax->labels->menu_name ),
