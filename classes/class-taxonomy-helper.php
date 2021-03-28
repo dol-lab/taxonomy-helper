@@ -33,6 +33,19 @@ class Taxonomy_Helper {
 	 */
 	private $blog_id = null;
 
+	/**
+	 * Weather the taxonomy is registered in WP.
+	 *
+	 * @var false
+	 */
+	private $registered = false;
+
+	/**
+	 * 
+	 * @var \WP_Taxonomy
+	 */
+	public $taxonomy;
+
 	/*
 	 * Check wp-includes/taxonomy ->register_taxonomy() for more context.
 	 *
@@ -42,13 +55,26 @@ class Taxonomy_Helper {
 	 * @return WP_Taxonomy|WP_Error The registered taxonomy object on success, WP_Error object on failure.
 	 */
 	public function __construct( string $taxonomy_slug, string $object_type, $args = array() ) {
-
 		$this->taxonomy_slug = $taxonomy_slug;
 		$this->object_type = $object_type;
 		$this->args = $this->th_get_default_args( $args );
+	}
 
-		\register_taxonomy( $taxonomy_slug, $object_type, $this->args );
-
+	/**
+	 * Register the taxonomy with wordpress (once)
+	 * 
+	 * @return WP_Taxonomy 
+	 * @throws Exception 
+	 */
+	public function register(){
+		if ( ! $this->registered ){
+			$tax = \register_taxonomy( $this->taxonomy_slug, $this->object_type, $this->args );
+			if ( is_wp_error( $this->taxonomy ) ){
+				throw new Exception( $tax->get_error_message() );
+			}
+			$this->taxonomy = $tax;
+		}
+		return $this->taxonomy;
 	}
 
 	/**

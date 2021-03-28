@@ -19,7 +19,7 @@ This package adds some classes which help adding taxonomies.
 
 ```php
 // works like register_taxonomy. It guesses all the other labels (in english).
-$taxonomy = new Taxonomy_Helper(
+$post_taxonomy = new Taxonomy_Helper(
 	'post-affiliation',
 	'post',
 	array(
@@ -29,9 +29,10 @@ $taxonomy = new Taxonomy_Helper(
 		),
 	),
 );
+$post_taxonomy->register();
 
 // add a taxonomy to the user-object. It will automatically add interfaces to the backend to manage usercategories (wip).
-$taxonomy = new User_Taxonomy_Helper(
+$user_taxonomy = new User_Taxonomy_Helper(
 	'user-affiliation',
 	'user',
 	array(
@@ -47,6 +48,7 @@ $taxonomy = new User_Taxonomy_Helper(
 		),
 	)
 );
+$user_taxonomy->register();
 
 
 ```
