@@ -28,7 +28,6 @@ class User_Taxonomy_Admin {
 		add_filter( "manage_edit-{$this->taxonomy_slug}_columns", array( $this, 'filter_manage_edit_user_tax_columns' ), 10 );
 		add_filter( "manage_{$this->taxonomy_slug}_custom_column", array( $this, 'filter_manage_user_tax_custom_column' ), 10, 3 );
 		add_filter( 'parent_file', array( $this, 'filter_user_tax_parent_file' ) );
-
 		add_filter( 'rest_prepare_user', array( $this, 'filter_user_taxonomy_helper_to_rest' ), 10, 3 );
 
 		if ( $this->user_taxonomy_helper->show_on_profile_page ) {
@@ -256,7 +255,9 @@ class User_Taxonomy_Admin {
 	 * Admin page for the taxonomy
 	 */
 	public function user_taxonomy_helper_admin_page() {
-		$tax = get_taxonomy( $this->taxonomy_slug );
+		if ( ! $tax = get_taxonomy( $this->taxonomy_slug ) ){
+			return;
+		}
 		add_users_page(
 			esc_attr( $tax->labels->menu_name ),
 			esc_attr( $tax->labels->menu_name ),
