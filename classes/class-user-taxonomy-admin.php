@@ -51,7 +51,10 @@ class User_Taxonomy_Admin {
 	 * @param WP_REST_Request  $request  Request object.
 	 */
 	public function filter_user_taxonomy_helper_to_rest( WP_REST_Response $response, WP_User $user, WP_REST_Request $request ) {
-		$response->add_links( $this->prepare_rest_link_user_taxonomy( $user, $this->taxonomy_slug ) );
+		$links = $this->prepare_rest_link_user_taxonomy( $user, $this->taxonomy_slug );
+		if ( ! empty( $links ) ){
+			$response->add_links( $links );
+		}
 		return $response;
 	}
 
