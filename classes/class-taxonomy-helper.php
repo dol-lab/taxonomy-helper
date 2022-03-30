@@ -61,7 +61,7 @@ class Taxonomy_Helper {
 	}
 
 	/**
-	 * Register the taxonomy with wordpress (once)
+	 * Register the taxonomy with WordPress (once)
 	 * 
 	 * @return WP_Taxonomy 
 	 * @throws Exception 
@@ -177,7 +177,7 @@ class Taxonomy_Helper {
 		if ( is_wp_error( $terms ) ) {
 			/**
 			 * Don't handle multiple outputs.
-			 * The risk of a non-exsting taxonomy is low, as we create it within this class.
+			 * The risk of a non-existing taxonomy is low, as we create it within this class.
 			 */
 			throw new \Exception( $terms->get_error_message() );
 		}
