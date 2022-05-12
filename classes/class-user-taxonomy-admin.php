@@ -116,6 +116,11 @@ class User_Taxonomy_Admin {
 		global $pagenow;
 		// switch_to_blog( 1 );
 		$tax = get_taxonomy( $this->taxonomy_slug );
+
+		if ( ! $tax ){
+			error_log( "Sorry, a taxonomy with the name '{$this->taxonomy_slug}' does not exist." );
+			return;
+		}
 		$labels = $tax->labels;
 		/* Make sure the user can assign terms of the current taxonomy before proceeding. */
 		if ( ! current_user_can( $tax->cap->assign_terms ) ) {
