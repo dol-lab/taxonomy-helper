@@ -34,7 +34,7 @@ class Taxonomy_Helper {
 	private $blog_id = null;
 
 	/**
-	 * Weather the taxonomy is registered in WP.
+	 * Wether the taxonomy is registered in WP.
 	 *
 	 * @var false
 	 */
