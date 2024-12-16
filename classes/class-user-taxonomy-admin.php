@@ -110,7 +110,7 @@ class User_Taxonomy_Admin {
 	/**
 	 * todo move the inline styles somewhere close to the walker.
 	 *
-	 * @param object $user The user object currently being edited.
+	 * @param \WP_User|string $user The user object currently being edited. This can be add-existing-user or add-new-user.
 	 */
 	function cb_edit_user_tax_section( $user ) {
 		global $pagenow;
@@ -137,7 +137,7 @@ class User_Taxonomy_Admin {
 		} else {
 			$walker = new Nested_Select_Terms_Walker();
 
-			if ( 'user-new.php' === $pagenow ) {
+			if ( 'user-new.php' === $pagenow || is_string( $user ) ) {
 				$selected_ids = array(); // don't check terms, when creating a new user.
 			} else {
 				$selected = wp_get_object_terms( $user->ID, $this->taxonomy_slug );
