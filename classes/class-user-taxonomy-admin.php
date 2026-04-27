@@ -263,7 +263,8 @@ class User_Taxonomy_Admin {
 	 * Admin page for the taxonomy
 	 */
 	public function user_taxonomy_helper_admin_page() {
-		if ( ! $tax = get_taxonomy( $this->taxonomy_slug ) ){
+		$tax = get_taxonomy( $this->taxonomy_slug );
+		if ( ! $tax ) {
 			return;
 		}
 		add_users_page(

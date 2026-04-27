@@ -117,7 +117,7 @@ class Taxonomy_Helper {
 		if ( null != $this->blog_id ) {
 			throw new Exception( 'Your blog id is already set' );
 		}
-		$this->$blog_id = $blog_id;
+		$this->blog_id = $blog_id;
 	}
 
 	/**
