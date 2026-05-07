@@ -86,7 +86,7 @@ class User_Taxonomy_Admin {
 		$tax = get_taxonomy( $this->taxonomy_slug );
 		// switch_to_blog( 1 );
 		/* Make sure the current user can edit the user and assign terms before proceeding. */
-		if ( ! current_user_can( 'edit_user', $user_id ) && current_user_can( $tax->cap->assign_terms ) ) {
+		if ( ! current_user_can( 'edit_user', $user_id ) && ( ! $tax || ! current_user_can( $tax->cap->assign_terms ) ) ) {
 			return false;
 		}
 
